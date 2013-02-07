@@ -5,7 +5,12 @@ from django.utils.translation import ugettext as _
 from django.utils.hashcompat import md5_constructor
 from django.core.urlresolvers import reverse
 
-from django.contrib.auth.models import User
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
 
 from avatar.settings import (AVATAR_GRAVATAR_BACKUP, AVATAR_GRAVATAR_DEFAULT,
                              AVATAR_DEFAULT_SIZE, AVATAR_GRAVATAR_SSL)
@@ -49,7 +54,7 @@ def avatar(user, size=AVATAR_DEFAULT_SIZE, css_class=""):
     else:
         alt = unicode(user)
         url = avatar_url(user, size)
-    return """<img src="%s" alt="%s" class="%s" width="%s" height="%s" />""" % (url, alt, 
+    return """<img src="%s" alt="%s" class="%s" width="%s" height="%s" />""" % (url, alt,
         css_class, size, size)
 
 @cache_result
@@ -57,7 +62,7 @@ def avatar(user, size=AVATAR_DEFAULT_SIZE, css_class=""):
 def primary_avatar(user, size=AVATAR_DEFAULT_SIZE):
     """
     This tag tries to get the default avatar for a user without doing any db
-    requests. It achieve this by linking to a special view that will do all the 
+    requests. It achieve this by linking to a special view that will do all the
     work for us. If that special view is then cached by a CDN for instance,
     we will avoid many db calls.
     """

@@ -8,7 +8,12 @@ from django.utils.hashcompat import md5_constructor
 from django.utils.encoding import smart_str
 from django.db.models import signals
 
-from django.contrib.auth.models import User
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
 
 try:
     from cStringIO import StringIO
@@ -71,10 +76,10 @@ class Avatar(models.Model):
     primary = models.BooleanField(default=False)
     avatar = models.ImageField(max_length=1024, upload_to=avatar_file_path, blank=True)
     date_uploaded = models.DateTimeField(default=datetime.datetime.now)
-    
+
     def __unicode__(self):
         return _(u'Avatar for %s') % self.user
-    
+
     def save(self, *args, **kwargs):
         avatars = Avatar.objects.filter(user=self.user)
         if self.pk:
@@ -87,14 +92,14 @@ class Avatar(models.Model):
             avatars.delete()
         invalidate_cache(self.user)
         super(Avatar, self).save(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         invalidate_cache(self.user)
         super(Avatar, self).delete(*args, **kwargs)
-    
+
     def thumbnail_exists(self, size):
         return self.avatar.storage.exists(self.avatar_name(size))
-    
+
     def create_thumbnail(self, size, quality=None):
         # invalidate the cache of the thumbnail with the given size first
         invalidate_cache(self.user, size)
@@ -124,7 +129,7 @@ class Avatar(models.Model):
 
     def avatar_url(self, size):
         return self.avatar.storage.url(self.avatar_name(size))
-    
+
     def avatar_name(self, size):
         ext = find_extension(AVATAR_THUMB_FORMAT)
         return avatar_file_path(

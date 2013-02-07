@@ -1,7 +1,12 @@
 from django.conf import settings
 from django.core.cache import cache
 
-from django.contrib.auth.models import User
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
 
 from avatar.settings import (AVATAR_DEFAULT_URL, AVATAR_CACHE_TIMEOUT,
                              AUTO_GENERATE_AVATAR_SIZES, AVATAR_DEFAULT_SIZE)
